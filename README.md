@@ -1,5 +1,5 @@
 # Snowball Uploader
-A script to move a billions files to snowball efficiently
+A script to move a billions files to snowballEdge efficiently
 - Date: Feb 20, 2021
 - Written by: Yongki Kim (hatsari@gmail.com)
 
