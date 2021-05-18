@@ -5,9 +5,7 @@ way: using multi-part uploading
 ref: https://gist.github.com/teasherm/bb73f21ed2f3b46bc1c2ca48ec2c1cf5
 changelog:
   - 2021.02.20
-    - save filelist_dir as filelist-currentdata.gz when executing genlist
-  - 2021.02.20
-    - performance improvement of genlist; dumping file list, not each line
+    - sort by inode number in genlist to improve listing files
   - 2021.02.20
     - replacing scandir.walk to os.walk. already os.walk module patched with scandir after python3.5
   - 2021.02.10
@@ -66,16 +64,16 @@ session = boto3.Session(profile_name='sbe1')
 s3 = session.client('s3', endpoint_url='http://10.10.10.10:8080')
 # or below
 #s3 = session.client('s3', endpoint_url='https://s3.ap-northeast-2.amazonaws.com')
-#s3 = boto3.client('s3', region_name='ap-northeast-2', endpoint_url='https://s3.ap-northeast-2.amazonaws.com', aws_access_key_id=None, aws_secret_access_key=None)
-target_path = '/data/src'   ## very important!! change to your source directory
+target_path = 'dataset/'   ## very important!! change to your source directory
 max_tarfile_size = 10 * 1024 ** 3 # 10GiB, 100GiB is max limit of snowball
 max_part_size = 500 * 1024 ** 2 # 500MB, 500MiB is max limit of snowball
 max_process = 5  # max process number, set the value to less than filelist files in filelist_dir 
 if os.name == 'nt':
     filelist_dir = "C:/tmp/fl_logdir_dkfjpoiwqjefkdjf/"  #for windows
 else:
-    filelist_dir = '/tmp/fl_logdir_dkfjpoiwqjefkdjf/'    #for linux
-
+    filelist_dir = '/tmp/fl_logdir_26/'    #for linux
+input_true = True  # if source file is provided, turn it True.
+input_file = 'src.txt' # input filename
 #### don't need to modify from here
 min_part_size = 5 * 1024 ** 2 # 5MiB, Don't change it, it is limit of snowball
 max_part_count = int(math.ceil(max_tarfile_size / max_part_size))
@@ -124,6 +122,11 @@ def gen_filelist():
             f_info = [file_name , target_file_name]
             f_info_str = delimiter.join(f_info)
             subfl_list.append(f_info_str)
+            #print("f_info: ", subfl_list)
+            #with do_open(fl_name, 'a') as fl_content:
+            #    target_file_name = rename_file(file_name)
+            #    fl_content.write(file_name + delimiter + target_file_name + '\n')                
+            #    print('%s, %s' % (file_name, target_file_name))
             if max_tarfile_size < sum_size:
                 write_to_file(fl_name, subfl_list)
                 fl_index = fl_index + 1
@@ -138,13 +141,20 @@ def gen_filelist():
         tar.add(filelist_dir, arcname=os.path.basename(filelist_dir))
     print('file lists are generated!!')
     print('check %s' % filelist_dir)
+    #return os.listdir(filelist_dir)
     return 0
 
 def get_org_files_list(source_file):
     filelist = []
     with do_open(source_file, 'r') as fn:
         for line in fn.readlines():
-            filelist.append({line.split(delimiter)[0]:line.split(delimiter)[1].replace('\n','')})
+            if input_true:
+                src_name = line.replace('\n','')
+                dest_name = src_name
+            else:
+                src_name = line.split(delimiter)[0]
+                dest_name = line.split(delimiter)[1].replace('\n','')
+            filelist.append({src_name:dest_name})
     return filelist
 
 def log_error(error_log, org_file, str_suffix):
@@ -293,8 +303,7 @@ if __name__ == "__main__":
                 task_index = 0
                 task_process = []
             task_index += 1
-        #print ('part progess of tar file could not reach the max, sorry for inconvenience')
-        print ("Snowball Uploading Finished")
+        print ('part progess of tar file could not reach the max, sorry for inconvenience')
     else:
         snowball_uploader_help()
 
