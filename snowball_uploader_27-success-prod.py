@@ -4,6 +4,8 @@ version: v27
 way: using multi-part uploading
 ref: https://gist.github.com/teasherm/bb73f21ed2f3b46bc1c2ca48ec2c1cf5
 changelog:
+  - 2022.01.19
+    - added no_extract variable and test to allow not setting the auto-extract metadata flag
   - 2021.06.10
     - v27
     - eliminate "renaming filename" feature
@@ -88,6 +90,7 @@ s3_class = "STANDARD" # ['STANDARD'|'REDUCED_REDUNDANCY'|'STANDARD_IA'|'ONEZONE_
 max_tarfile_size = 10 * (1024 ** 3) # 10GiB, 100GiB is max limit of snowball
 max_part_size = 100 * (1024 ** 2) # 100MB, 500MiB is max limit of snowball
 max_process = 5  # max process number, set the value to less than filelist files in filelist_dir 
+no_extract ='' # set to y to bypass setting of the auto-extract metadata tag
 
 #### don't need to modify from here
 min_part_size = 5 * 1024 ** 2 # 16MiB for S3, 5MiB for SnowballEdge
@@ -168,7 +171,10 @@ def log_success(success_log, org_file, str_suffix):
         success.write(org_file + str_suffix)
 
 def create_mpu(key_name):
-    mpu = s3.create_multipart_upload(Bucket=bucket_name, Key=key_name, StorageClass=s3_class, Metadata={"snowball-auto-extract": "true"})
+    if no_extract == "y":
+        mpu = s3.create_multipart_upload(Bucket=bucket_name, Key=key_name, StorageClass=s3_class)
+    else:
+        mpu = s3.create_multipart_upload(Bucket=bucket_name, Key=key_name, StorageClass=s3_class, Metadata={"snowball-auto-extract": "true"})
     mpu_id = mpu["UploadId"]
     return mpu_id
 
