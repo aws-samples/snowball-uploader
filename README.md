@@ -5,6 +5,8 @@ A script to move a billions files to snowballEdge efficiently
 
 ## Change Logs
 ```
+  - 2022.01.19
+    - added option to bypass setting the auto-extract metadata tag
   - 2021.02.20
     - save filelist_dir as filelist-currentdata.gz when executing genlist
   - 2021.02.20
