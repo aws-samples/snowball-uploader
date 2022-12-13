@@ -79,6 +79,8 @@ endpoint = "http://10.10.10.10:8080"
 #s3 = session.client('s3', endpoint_url='http://10.10.10.10:8080')
 # or below
 #s3 = boto3.client('s3', region_name='ap-northeast-2', endpoint_url='https://s3.ap-northeast-2.amazonaws.com', aws_access_key_id=None, aws_secret_access_key=None)
+session = boto3.Session(profile_name=profile_name)
+s3 = session.client('s3', endpoint_url=endpoint)
 target_path = "/data/"   ## very important!! change to your source directory
 if os.name == "nt":
     filelist_dir = "C:/tmp/fl_logdir_dkfjpoiwqjefkdjf/"  #for windows
@@ -281,8 +283,6 @@ if __name__ == "__main__":
     elif sys.argv[1] == "genlist":
         gen_filelist()
     elif sys.argv[1] == "cp_snowball":
-        session = boto3.Session(profile_name=profile_name)
-        s3 = session.client('s3', endpoint_url=endpoint)
         #source_files =  [ f for f in os.listdir(filelist_dir) if os.path.isfile(f)]
         source_files =  os.listdir(filelist_dir)
         max_source_files = len(source_files)
